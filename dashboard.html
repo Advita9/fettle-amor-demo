@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital Appointment Dashboard</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #0066cc;
+      color: white;
+      padding: 16px 32px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    main {
+      margin: 30px auto;
+      max-width: 900px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 24px;
+    }
+
+    h2 {
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: #e8f0fe;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+      font-size: 15px;
+    }
+
+    th {
+      color: #003366;
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background: #f1f7ff;
+    }
+
+    #refresh-time {
+      font-size: 13px;
+      color: #666;
+      text-align: right;
+      margin-top: 8px;
+    }
+
+    .status {
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 13px;
+    }
+
+    .status-active {
+      background: #e6f4ea;
+      color: #137333;
+    }
+
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 13px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <header>🏥 Hospital Appointment Dashboard</header>
+
+  <main>
+    <h2>📋 Recent Appointments</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Patient Name</th>
+          <th>Doctor</th>
+          <th>Department</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Created At</th>
+        </tr>
+      </thead>
+      <tbody id="appointments">
+        <tr><td colspan="6" style="text-align:center; color:#777;">Loading appointments...</td></tr>
+      </tbody>
+    </table>
+    <div id="refresh-time"></div>
+  </main>
+
+  <footer>
+    Hospital AI Assistant | Powered by Vapi + Twilio | © 2025
+  </footer>
+
+  <script>
+    async function loadAppointments() {
+      try {
+        const response = await fetch("appointments.json?_t=" + new Date().getTime());
+        if (!response.ok) throw new Error("Failed to load data");
+        const data = await response.json();
+        const table = document.getElementById("appointments");
+        const refreshTime = document.getElementById("refresh-time");
+
+        if (data.length === 0) {
+          table.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#777;">No appointments yet</td></tr>`;
+          return;
+        }
+
+        // Reverse order so latest shows first
+        const latest = data.slice().reverse();
+        table.innerHTML = latest.map(a => `
+          <tr>
+            <td>${a.patient_name}</td>
+            <td>${a.doctor}</td>
+            <td>${a.specialization}</td>
+            <td>${a.date}</td>
+            <td>${a.time}</td>
+            <td>${new Date(a.timestamp).toLocaleString()}</td>
+          </tr>
+        `).join("");
+
+        refreshTime.textContent = "Last updated: " + new Date().toLocaleTimeString();
+      } catch (err) {
+        console.error("Error loading appointments:", err);
+        document.getElementById("appointments").innerHTML =
+          `<tr><td colspan="6" style="text-align:center; color:red;">Error loading appointments</td></tr>`;
+      }
+    }
+
+    // Initial load + auto-refresh every 5 seconds
+    loadAppointments();
+    setInterval(loadAppointments, 5000);
+  </script>
+</body>
+</html>
+
