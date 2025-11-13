@@ -18,14 +18,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- TWILIO CONFIG ---
+
 ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-FROM_WHATSAPP = "whatsapp:+14155238886"  # Twilio Sandbox number
-TO_WHATSAPP = "whatsapp:+917032451866"   # Replace with hospital’s or your number
+FROM_WHATSAPP = "whatsapp:+14155238886"  
+TO_WHATSAPP = "whatsapp:+918052407029"   
 client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
-# --- BACKEND CONFIG ---
+
 BACKEND_LOGIN_URL = "http://13.204.53.17:8000/api/login/"
 BACKEND_SYNC_URL = "http://13.204.53.17:8000/api/sync-call-data/"
 BACKEND_TOKEN = None
@@ -46,10 +46,10 @@ def get_backend_token():
         resp = requests.post(BACKEND_LOGIN_URL, json=payload)
         resp.raise_for_status()
         BACKEND_TOKEN = resp.json().get("token")
-        print("✅ Logged into backend, got token.")
+        print("Logged into backend, got token.")
         return BACKEND_TOKEN
     except Exception as e:
-        print("❌ Failed to get backend token:", e)
+        print("Failed to get backend token:", e)
         return None
 
 
@@ -61,10 +61,10 @@ async def appointment_webhook(request: Request):
     and posts call transcription + summary to backend.
     """
     data = await request.json()
-    print("📩 Incoming webhook data:", data)
+    print("Incoming webhook data:", data)
 
     try:
-        # --- Extract appointment details ---
+        # Extract appointment details
         args = data.get("message", {}).get("toolCalls", [{}])[0].get("function", {}).get("arguments", {})
         patient_name = args.get("patient_name", "Unknown")
         doctor_name = args.get("doctor_name", "Unknown")
@@ -73,7 +73,7 @@ async def appointment_webhook(request: Request):
         time = args.get("time", "Unknown")
         caller_number = args.get("caller_number", "+91XXXXXXXXXX")
 
-        # --- Send WhatsApp Message ---
+        # Send WhatsApp Message 
         msg_text = (
             f"📅 *New Appointment Booked!*\n\n"
             f"👤 *Patient:* {patient_name}\n"
@@ -84,15 +84,15 @@ async def appointment_webhook(request: Request):
             f"Please prepare accordingly and confirm in HMS."
         )
         message = client.messages.create(from_=FROM_WHATSAPP, to=TO_WHATSAPP, body=msg_text)
-        print(f"✅ WhatsApp message sent: {message.sid}")
+        print(f"WhatsApp message sent: {message.sid}")
 
-        # --- Compose call log data (mock for now) ---
+        # Compose call log data (mock for now)
         started_at = datetime.now(timezone.utc).isoformat()
         ended_at = datetime.now(timezone.utc).isoformat()
         duration = 180  # assume 3 mins for demo
         summary = f"Patient {patient_name} scheduled appointment with {doctor_name} ({speciality})."
 
-        # --- Post to backend ---
+        # Post to backend 
         token = get_backend_token()
         if not token:
             raise Exception("No backend token available")
@@ -116,16 +116,16 @@ async def appointment_webhook(request: Request):
         }
 
         resp = requests.post(BACKEND_SYNC_URL, json=payload, headers=headers)
-        print(f"📡 Sent data to backend ({resp.status_code}):", resp.text[:200])
+        print(f"Sent data to backend ({resp.status_code}):", resp.text[:200])
 
         return {"status": "success", "sent_message": msg_text, "backend_sync": resp.status_code}
 
     except Exception as e:
-        print("❌ Error processing webhook:", e)
+        print(" Error processing webhook:", e)
         return {"status": "error", "error": str(e)}
 
 
 @app.get("/")
 async def root():
-    return {"message": "Appointment webhook server running ✅"}
+    return {"message": "Appointment webhook server running"}
 
