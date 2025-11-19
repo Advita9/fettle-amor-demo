@@ -22,7 +22,7 @@ app.add_middleware(
 ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 FROM_WHATSAPP = "whatsapp:+14155238886"  
-TO_WHATSAPP = "whatsapp:+918052407029"   
+TO_WHATSAPP = "whatsapp:+917032451866"   
 client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
 
